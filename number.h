@@ -2,17 +2,20 @@
 
 #include <vector>
 #include <string>
+#include <algorithm>
+#include <iostream>
 
 class number {
 public:
 	number(long long n = 0);
 	number(const std::string& n); //
 	number(const std::vector<int>& n); //
-	inline unsigned int operator[](const size_t pos) const; //
-	unsigned int& operator[](const size_t pos); //
+	number(std::vector<int>&& n);
+	inline int operator[](const size_t pos) const; //
+	int& operator[](const size_t pos); //
 	number operator*(const number& num);
 	friend number mult(const number& n1, const number& n2); //
-	std::string tostring(); //
+	std::string tostring() const; //
 	friend std::ostream& operator << (std::ostream& ps, const number& n); //
 
 private:
@@ -24,6 +27,7 @@ private:
 
 
 	int sign;
-	std::vector<unsigned int> digits;
+	static unsigned int min_size;
+	std::vector<int> digits;
 };
 
