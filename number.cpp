@@ -45,11 +45,11 @@ number number::operator*(const number& num) {
 
 	size_t k = 0;
 
-	while (m / 2 > min_size) {
+	while (m / 2 >= min_size) {
 		m = m / 2;
 		k++;
 	}
-
+	m++;
 	m <<= k;
 
 	number fm1, fm2;
@@ -60,6 +60,7 @@ number number::operator*(const number& num) {
 	std::copy(num.digits.begin(), num.digits.end(), fm2.digits.begin());
 
 	auto res = fm1._fastmult(fm2);
+	res.sign = this->sign * num.sign;
 	res.normalize();
 
 	return res;
@@ -133,7 +134,7 @@ number number::_fastmult(const number& num) const {
 		auto x_plus_yl = xl_num._plus(xr_num);
 		auto x_plus_yr = yl_num._plus(yr_num);
 
-		auto mid = ((x_plus_yl._fastmult(x_plus_yr))._minus(xyl_res))._minus(xyr_res); //здесь разные размеры, что не должно быть
+		auto mid = ((x_plus_yl._fastmult(x_plus_yr))._minus(xyl_res))._minus(xyr_res); 
 
 		std::copy(xyr_res.digits.begin(), xyr_res.digits.end(), res.digits.begin() + 2 * half_size);
 		std::copy(xyl_res.digits.begin(), xyl_res.digits.end(), res.digits.begin());
@@ -158,8 +159,13 @@ number mult(const number& n1, const number& n2) {
 }
 
 std::ostream& operator<<(std::ostream& ps, const number& n) {
-	for (int i = n.digits.size() - 1; i >= 0; i--) {
-		ps << n.digits[i];
+	if (n.sign < 0) {
+		ps << '-';
+	}
+	ps << n.digits.back();
+	for (int i = n.digits.size() - 2; i >= 0; i--) {
+		std::string tmp = std::to_string(n.digits[i]);
+		ps << std::string(3 - tmp.size(), '0') + tmp;
 	}
 	return ps;
 }
@@ -169,16 +175,13 @@ void number::normalize() {
 	int carry = 0;
 	for (int i = 0; i < this->digits.size(); i++) {
 		int sum = digits[i] + carry;
-		if (sum > 0) {
+		if (sum >= 0) {
 			carry = sum / 1000;
 			this->digits[i] = sum % 1000;
 		}
 		else {
-			carry = (-sum) / 1000 + i;
-			this->digits[i] = (-sum) % 1000;
-			if (!digits[i]) {
-				carry--;
-			}
+			carry = (sum + 1)/ 1000 - 1;
+			this->digits[i] = sum - carry * 1000;
 		}
 	}
 	if (!carry) {
