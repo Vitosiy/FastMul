@@ -16,14 +16,23 @@ number::number(long long n) {
 	} while (n > 0);
 }
 
-number::number(const std::string& n) {
-	auto tmp = n;
-	std::reverse(tmp.begin(), tmp.end());
+number::number(std::string n) {
 	
 	n[0] == '-' ? this->sign = -1 : this->sign = 1;
 
+	if (n.size() <= 3 and this->sign == 1 or n.size() <= 4 and this->sign == -1) {
+		if (this->sign == 1) {
+			this->digits.push_back(std::stoi(n));
+		}
+		else {
+			this->digits.push_back(std::stoi(n.substr(1, n.size())));
+		}
+
+		return;
+	}
+
 	for (int i = n.size(); i > 0; i = i - 3) {
-		this->digits.push_back(std::stoi(tmp.substr(tmp.size() - i, 3)));
+		this->digits.push_back(std::stoi(n.substr(n.size() - i, 3)));
 	}
 }
 
@@ -75,8 +84,8 @@ std::string number::tostring() const {
 	if (this->sign < 0) {
 		res = "-";
 	}
-	for (int i = this->digits.size(); i >= 0; i--) {
-		std::string tmp = std::to_string(this->digits[i]);
+	for (int i = this->digits.size(); i > 0; i--) {
+		std::string tmp = std::to_string(this->digits[i - 1]);
 		res = res + std::string(3 - tmp.size(), '0') + tmp;
 	}
 	return res;
@@ -193,5 +202,9 @@ void number::normalize() {
 	}
 	while (!this->digits.back() and this->digits.size() > 1) {
 		this->digits.pop_back();
+	}
+
+	if (res.digits.size() == 0 and res.digits[0] == 0) {
+		res.sign = 1;
 	}
 }
