@@ -17,10 +17,14 @@ number::number(long long n) {
 }
 
 number::number(const std::string& n) {
-	for (int i = n.size(); i >= 0; i = i - 3) {
-		this->digits.push_back(std::stoi(n.substr(i, i - 3 < 0 ? n.size() - i : i - 3)));
-	}
+	auto tmp = n;
+	std::reverse(tmp.begin(), tmp.end());
+	
 	n[0] == '-' ? this->sign = -1 : this->sign = 1;
+
+	for (int i = n.size(); i > 0; i = i - 3) {
+		this->digits.push_back(std::stoi(tmp.substr(tmp.size() - i, 3)));
+	}
 }
 
 number::number(const std::vector<int>& n) {
