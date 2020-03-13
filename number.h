@@ -9,10 +9,10 @@ class number {
 public:
 	number(long long n = 0);
 	number(std::string n);
-	number(const std::vector<int>& n);
-	number(std::vector<int>&& n);
-	inline int operator[](const size_t pos) const;
-	int& operator[](const size_t pos);
+	number(const std::vector<long long>& n);
+	number(std::vector<long long>&& n);
+	inline long long operator[](const size_t pos) const;
+	long long& operator[](const size_t pos);
 	number operator*(const number& num);
 	friend number mult(const number& n1, const number& n2);
 	std::string tostring() const;
@@ -28,6 +28,6 @@ private:
 
 	int sign;
 	static unsigned int min_size;
-	std::vector<int> digits;
+	std::vector<long long> digits;
 };
 

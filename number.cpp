@@ -1,6 +1,6 @@
 #include "number.h"
 
-unsigned int number::min_size = 1;
+unsigned int number::min_size = 64;
 
 number::number(long long n) {
 	if (n >= 0) {
@@ -16,40 +16,36 @@ number::number(long long n) {
 	} while (n > 0);
 }
 
-number::number(std::string n) {
-	
+number::number(std::string n) {	
 	n[0] == '-' ? this->sign = -1 : this->sign = 1;
 
-	if (n.size() <= 3 and this->sign == 1 or n.size() <= 4 and this->sign == -1) {
-		if (this->sign == 1) {
-			this->digits.push_back(std::stoi(n));
-		}
-		else {
-			this->digits.push_back(std::stoi(n.substr(1, n.size())));
-		}
+	//<-
 
-		return;
+	const int border = this->sign == -1 ? 1 : 0;
+	int i = n.size() - 3;
+	for (i; i >= border; i = i - 3) {
+		this->digits.push_back(std::stoi(n.substr(i, 3)));
 	}
 
-	for (int i = n.size(); i > 0; i = i - 3) {
-		this->digits.push_back(std::stoi(n.substr(n.size() - i, 3)));
+	if (i + 3 - border > 0) {
+		this->digits.push_back(std::stoi(n.substr(border, i + 3 - border)));
 	}
 }
 
-number::number(const std::vector<int>& n) {
+number::number(const std::vector<long long>& n) {
 	this->digits = n;
 	this->sign = 1;
 }
 
-number::number(std::vector<int>&& n) {
+number::number(std::vector<long long>&& n) {
 	this->digits = n;
 }
 
-inline int number::operator[](const size_t pos) const {
+inline long long number::operator[](const size_t pos) const {
 	return this->digits[pos];
 }
 
-int& number::operator[](const size_t pos) {
+long long& number::operator[](const size_t pos) {
 	return this->digits[pos];
 }
 
@@ -84,7 +80,8 @@ std::string number::tostring() const {
 	if (this->sign < 0) {
 		res = "-";
 	}
-	for (int i = this->digits.size(); i > 0; i--) {
+	res = res + std::to_string(this->digits.back());
+	for (int i = this->digits.size() - 1; i > 0; i--) {
 		std::string tmp = std::to_string(this->digits[i - 1]);
 		res = res + std::string(3 - tmp.size(), '0') + tmp;
 	}
@@ -94,7 +91,7 @@ std::string number::tostring() const {
 number number::_plus(const number& n) const {
 	number res;
 	res.digits.resize(n.digits.size());
-	std::transform(this->digits.begin(), this->digits.end(), n.digits.begin(), res.digits.begin(), std::plus<int>());
+	std::transform(this->digits.begin(), this->digits.end(), n.digits.begin(), res.digits.begin(), std::plus<long long>());
 
 	return res;
 }
@@ -102,7 +99,7 @@ number number::_plus(const number& n) const {
 number number::_minus(const number& n) const {
 	number res;
 	res.digits.resize(n.digits.size());
-	std::transform(this->digits.begin(), this->digits.end(), n.digits.begin(), res.digits.begin(), std::minus<int>());
+	std::transform(this->digits.begin(), this->digits.end(), n.digits.begin(), res.digits.begin(), std::minus<long long>());
 
 	return res;
 }
@@ -123,7 +120,7 @@ number number::_mult(const number& n) const {
 number number::_fastmult(const number& num) const {
 	number res;
 
-	if (num.digits.size() <= 1) { //64
+	if (num.digits.size() <= min_size) {
 		res = _mult(num);
 	}
 	else{
@@ -131,10 +128,10 @@ number number::_fastmult(const number& num) const {
 
 		unsigned int half_size = num.digits.size() / 2;
 
-		std::vector<int> xl{this->digits.begin(), this->digits.begin() + half_size};
-		std::vector<int> xr{this->digits.begin() + half_size, this->digits.end()};
-		std::vector<int> yl{num.digits.begin(), num.digits.begin() + half_size};
-		std::vector<int> yr{num.digits.begin() + half_size, num.digits.end()};
+		std::vector<long long> xl{this->digits.begin(), this->digits.begin() + half_size};
+		std::vector<long long> xr{this->digits.begin() + half_size, this->digits.end()};
+		std::vector<long long> yl{num.digits.begin(), num.digits.begin() + half_size};
+		std::vector<long long> yr{num.digits.begin() + half_size, num.digits.end()};
 
 		number xl_num(std::move(xl));
 		number xr_num(std::move(xr));
@@ -151,7 +148,7 @@ number number::_fastmult(const number& num) const {
 
 		std::copy(xyr_res.digits.begin(), xyr_res.digits.end(), res.digits.begin() + 2 * half_size);
 		std::copy(xyl_res.digits.begin(), xyl_res.digits.end(), res.digits.begin());
-		std::transform(mid.digits.begin(), mid.digits.end(), res.digits.begin() + half_size, res.digits.begin() + half_size, std::plus<int>());
+		std::transform(mid.digits.begin(), mid.digits.end(), res.digits.begin() + half_size, res.digits.begin() + half_size, std::plus<long long>());
 	}
 
 	return res;
@@ -185,9 +182,9 @@ std::ostream& operator<<(std::ostream& ps, const number& n) {
 
 void number::normalize() {
 	number res;
-	int carry = 0;
+	long long carry = 0;
 	for (int i = 0; i < this->digits.size(); i++) {
-		int sum = digits[i] + carry;
+		long long sum = digits[i] + carry;
 		if (sum >= 0) {
 			carry = sum / 1000;
 			this->digits[i] = sum % 1000;
