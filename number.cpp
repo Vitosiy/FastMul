@@ -154,6 +154,45 @@ number number::_fastmult(const number& num) const {
 	return res;
 }
 
+number number::_fastmult_async(const number& num) const {
+	number res;
+
+	if (num.digits.size() <= min_size) {
+		res = _mult(num);
+	}
+	else {
+		res.digits.resize(2 * num.digits.size());
+
+		unsigned int half_size = num.digits.size() / 2;
+
+		std::vector<long long> xl{this->digits.begin(), this->digits.begin() + half_size};
+		std::vector<long long> xr{this->digits.begin() + half_size, this->digits.end()};
+		std::vector<long long> yl{num.digits.begin(), num.digits.begin() + half_size};
+		std::vector<long long> yr{num.digits.begin() + half_size, num.digits.end()};
+
+		number xl_num(std::move(xl));
+		number xr_num(std::move(xr));
+		number yl_num(std::move(yl));
+		number yr_num(std::move(yr));
+
+		auto future_xyr = std::async(std::launch::async, &number::_fastmult_async, xr_num, std::reference_wrapper<const number>(yr_num));
+		auto xyl_res = xl_num._fastmult_async(yl_num);
+		//auto xyr_res = xr_num._fastmult_async(yr_num);
+
+		auto xyr_res = future_xyr.get();
+		auto x_plus_yl = xl_num._plus(xr_num);
+		auto x_plus_yr = yl_num._plus(yr_num);
+
+		auto mid = ((x_plus_yl._fastmult_async(x_plus_yr))._minus(xyl_res))._minus(xyr_res);
+
+		std::copy(xyr_res.digits.begin(), xyr_res.digits.end(), res.digits.begin() + 2 * half_size);
+		std::copy(xyl_res.digits.begin(), xyl_res.digits.end(), res.digits.begin());
+		std::transform(mid.digits.begin(), mid.digits.end(), res.digits.begin() + half_size, res.digits.begin() + half_size, std::plus<long long>());
+	}
+
+	return res;
+}
+
 number mult(const number& n1, const number& n2) {
 	number res;
 	res.sign = n1.sign * n2.sign;
@@ -165,6 +204,32 @@ number mult(const number& n1, const number& n2) {
 	}
 
 	res.normalize();
+	return res;
+}
+
+number fast_mult_async(const number& n1, const number& n2) {
+	auto m = std::max(n1.digits.size(), n2.digits.size());
+
+	size_t k = 0;
+
+	while (m / 2 >= number::min_size) {
+		m = m / 2;
+		k++;
+	}
+	m++;
+	m <<= k;
+
+	number fm1, fm2;
+	fm1.digits.resize(m);
+	fm2.digits.resize(m);
+
+	std::copy(n1.digits.begin(), n1.digits.end(), fm1.digits.begin());
+	std::copy(n2.digits.begin(), n2.digits.end(), fm2.digits.begin());
+
+	auto res = fm1._fastmult_async(fm2);
+	res.sign = n1.sign * n2.sign;
+	res.normalize();
+
 	return res;
 }
 

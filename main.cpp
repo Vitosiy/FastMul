@@ -227,13 +227,15 @@ void test_from_file() {
 		std::cout << get_exec_time([&]() {
 			number_res = n1 * n2;
 		}) << std::endl;
-		//std::cout << number_res << std::endl;
 		std::cout << (number_res.tostring() == res) << std::endl;
-		//res_file << number_res.tostring();
-		std::cout << number_res.tostring().size() << " " << res.size() << std::endl;
 
 		std::cout << get_exec_time([&]() {
 			number_res = mult(n1, n2);
+			}) << std::endl;
+		std::cout << (number_res.tostring() == res) << std::endl;
+
+		std::cout << get_exec_time([&]() {
+			number_res = fast_mult_async(n1, n2);
 			}) << std::endl;
 		std::cout << (number_res.tostring() == res) << std::endl;
 	}
